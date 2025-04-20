@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catch the Box Game</title>
+<style>
+  body {
+    margin: 0;
+    overflow: hidden;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+  }
+  canvas {
+    display: block;
+  }
+  #score {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    font-size: 24px;
+    color: #333;
+  }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas"></canvas>
+<div id="score">Score: 0</div>
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let score = 0;
+const boxes = [];
+const player = {
+  x: canvas.width / 2,
+  y: canvas.height - 50,
+  width: 30,
+  height: 30,
+  color: 'blue',
+  speed: 7
+};
+
+function Box(x, y, width, height, color, speed) {
+  this.x = x;
+  this.y = y;
+  this.width = width;
+  this.height = height;
+  this.color = color;
+  this.speed = speed;
+}
+
+Box.prototype.draw = function() {
+  ctx.fillStyle = this.color;
+  ctx.fillRect(this.x, this.y, this.width, this.height);
+};
+
+Box.prototype.update = function() {
+  this.y += this.speed;
+  if (this.y > canvas.height) {
+    this.y = -this.height;
+    this.x = Math.random() * (canvas.width - this.width);
+  }
+  this.draw();
+};
+
+function createBoxes() {
+  for (let i = 0; i < 5; i++) {
+    const width = 40;
+    const height = 40;
+    const x = Math.random() * (canvas.width - width);
+    const y = Math.random() * -canvas.height;
+    const color = `rgb(${Math.random() * 255}, ${Math.random() * 255}, ${Math.random() * 255})`;
+    const speed = Math.random() * 3 + 1;
+    boxes.push(new Box(x, y, width, height, color, speed));
+  }
+}
+
+function drawPlayer() {
+  ctx.fillStyle = player.color;
+  ctx.fillRect(player.x, player.y, player.width, player.height);
+}
+
+function updatePlayer() {
+  if (keys['ArrowLeft'] && player.x > 0) player.x -= player.speed;
+  if (keys['ArrowRight'] && player.x < canvas.width - player.width) player.x += player.speed;
+}
+
+function collisionDetection() {
+  boxes.forEach(box => {
+    if (
+      player.x < box.x + box.width &&
+      player.x + player.width > box.x &&
+      player.y < box.y + box.height &&
+      player.y + player.height > box.y
+    ) {
+      score++;
+      document.getElementById('score').innerText = `Score: ${score}`;
+      box.y = -box.height;
+      box.x = Math.random() * (canvas.width - box.width);
+    }
+  });
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawPlayer();
+  boxes.forEach(box => box.update());
+  updatePlayer();
+  collisionDetection();
+  requestAnimationFrame(gameLoop);
+}
+
+const keys = {};
+window.addEventListener('keydown', e => keys[e.key] = true);
+window.addEventListener('keyup', e => keys[e.key] = false);
+
+createBoxes();
+gameLoop();
+</script>
+</body>
+</html>
